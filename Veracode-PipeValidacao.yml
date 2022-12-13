@@ -33,14 +33,14 @@ stages:
         destinationFolder: '$(Build.ArtifactStagingDirectory)'
         cleanDestinationFolder: false
     - script: |
-          java -jar $(Build.ArtifactStagingDirectory)/pipeline-scan.jar -vid $(APIID) -vkey $(APIKEY) --file '$(caminhoPacote)' --issue_details true --json_output_file "SAST-results.json"
+          java -jar $(Build.ArtifactStagingDirectory)/pipeline-scan.jar -vid $(APIID) -vkey $(APIKEY) --file '$(caminhoPacote)' --issue_details true --summary_output_file "SAST-results.txt"
       displayName: 'Veracode PipelineScan'
       continueOnError: true
       
     - task: PublishBuildArtifacts@1
       inputs:
-        PathtoPublish: 'SAST-results.json'
-        ArtifactName: 'SAST'
+        PathtoPublish: 'SAST-results.txt'
+        ArtifactName: 'Veracode'
         publishLocation: 'Container'
 
 - stage: SCA
@@ -52,12 +52,12 @@ stages:
       inputs:
         script: |
           export SRCCLR_SCM_NAME=$(veracodeAppProfile)
-          curl -sSL https://download.sourceclear.com/ci.sh | bash -s – scan --update-advisor --allow-dirty --json=SCA-results.json
+          curl -sSL https://download.sourceclear.com/ci.sh | bash -s – scan --update-advisor --allow-dirty >> SCA-results.txt
       displayName: 'Veracode SCA'
       continueOnError: true
     
     - task: PublishBuildArtifacts@1
       inputs:
-        PathtoPublish: 'SCA-results.json'
-        ArtifactName: 'SCA'
+        PathtoPublish: 'SCA-results.txt'
+        ArtifactName: 'Veracode'
         publishLocation: 'Container'
