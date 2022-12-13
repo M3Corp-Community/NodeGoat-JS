@@ -46,7 +46,7 @@ stages:
 - stage: SCA
   displayName: SCA
   jobs:
-  - job: Agent-Based
+  - job: AgentBased
     steps: 
     - task: CmdLine@2
       inputs:
