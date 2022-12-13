@@ -11,7 +11,7 @@ variables:
 
 stages:
 - stage: SAST
-  displayName: Build
+  displayName: SAST
   jobs:
   - job: PipelineScan
     steps: 
@@ -46,7 +46,7 @@ stages:
 - stage: SCA
   displayName: SCA
   jobs:
-  - job: Build
+  - job: Agent-Based
     steps: 
     - task: CmdLine@2
       inputs:
