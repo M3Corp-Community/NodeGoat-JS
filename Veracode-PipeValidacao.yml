@@ -33,7 +33,7 @@ stages:
         destinationFolder: '$(Build.ArtifactStagingDirectory)'
         cleanDestinationFolder: false
     - script: |
-          java -jar $(Build.ArtifactStagingDirectory)/pipeline-scan.jar -vid $(APIID) -vkey $(APIKEY) --file '$(caminhoPacote)' --issue_details true --summary_output_file "SAST-results.txt"
+          java -jar $(Build.ArtifactStagingDirectory)/pipeline-scan.jar -vid $(APIID) -vkey $(APIKEY) --file '$(caminhoPacote)' --issue_details true --summary_output true --summary_output_file "SAST-results.txt"
       displayName: 'Veracode PipelineScan'
       continueOnError: true
       
@@ -45,6 +45,7 @@ stages:
 
 - stage: SCA
   displayName: SCA
+  dependsOn:
   jobs:
   - job: AgentBased
     steps: 
