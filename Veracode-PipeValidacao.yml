@@ -6,7 +6,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  veracodeAppProfile: AzDevOps.$(Build.DefinitionName)
+  veracodeAppProfile: $(Build.DefinitionName)
   caminhoPacote: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
 
 stages:
