@@ -6,8 +6,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  veracodeAppProfile: $(Build.DefinitionName)
-  caminhoPacote: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+- group: Veracode
 
 stages:
 - stage: SAST
