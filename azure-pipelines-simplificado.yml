@@ -1,0 +1,51 @@
+# Node
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- group: Veracode
+
+steps:
+# Fazemos o empacotamento dos arquivos conforme o guia da Veracode:
+# https://docs.veracode.com/r/c_comp_quickref 
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Agent.BuildDirectory)'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(caminhoPacote)'
+    replaceExistingArchive: true
+  displayName: 'Criando pacote para analise'
+
+# Utilizamos a task da Veracode para iniciar um scan unificado de SCA e SAST
+# Fazemos a autenticação com a Service Connection chamada "veracode-evento"
+# Enviamos para a analise o ZIP que geramos na etapa anterior
+- task: Veracode@3
+  inputs:
+    ConnectionDetailsSelection: 'Endpoint'
+    AnalysisService: 'veracode-evento'
+    veracodeAppProfile: '$(veracodeAppProfile)'
+    version: '$(build.buildNumber)'
+    filepath: '$(caminhoPacote)'
+    createProfile: true
+    importResults: true
+    maximumWaitTime: '360'
+  displayName: 'Veracode SAST'
+
+# Após o termino da analise, recebemos os resultados e transformamos qualquer falha encontrar em um novo card no Boards
+- task: Veracode Flaw Importer@3
+  inputs:
+    ConnectionDetailsSelection: 'Endpoint'
+    AnalysisService: 'veracode-evento'
+    veracodeAppProfile: '$(veracodeAppProfile)'
+    sandboxName: 
+    scanType: 'Dynamic, Static, and Software Composition Analysis'
+    importType: 'All Unmitigated Flaws Violating Policy'
+    workItemType: 'Issue'
+    area: '$(system.teamProject)'
+    overwriteAreaPathInWorkItemsOnImport: true
+    flawImportLimit: '1000'
+  displayName: 'Veracode importando falhas'
