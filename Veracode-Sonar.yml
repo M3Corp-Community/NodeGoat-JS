@@ -23,6 +23,10 @@ stages:
       inputs:
         command: 'install'
       displayName: 'NPM Install'
+    - script: |
+        FILTERED_PARAMS=$(echo $SONARQUBE_SCANNER_PARAMS | sed 's/"sonar.branch.name":"[^"]*"\,//g')
+        echo "##vso[task.setvariable variable=SONARQUBE_SCANNER_PARAMS]$FILTERED_PARAMS"
+      displayName: Workaround para 
     - task: SonarQubeAnalyze@5
       displayName: 'Run Analysis'
     - task: SonarQubePublish@5
