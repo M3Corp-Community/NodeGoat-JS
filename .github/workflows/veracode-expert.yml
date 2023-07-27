@@ -1,4 +1,4 @@
-name: Veracode_Advanced
+name: Veracode_Expert
 on:
   push:
     branches: [ master ]
@@ -30,6 +30,26 @@ jobs:
         run: |
           curl -sSL 'https://download.sourceclear.com/ci.sh' | bash -s – scan --update-advisor --pull-request --allow-dirty
 
+  Veracode-container_iac_secrets-scan:
+    runs-on: ubuntu-latest
+    name: Veracode Container/IaC/Secrets
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Verracode Container/IaC/Secrets action step
+        uses: veracode/container_iac_secrets_scanning@v1.0.0
+        with:
+          vid: ${{ secrets.VeracodeID }}
+          vkey: ${{ secrets.VeracodeKey }}
+          command: "scan" 
+          type: "directory"
+          source: "./"
+          format: "json"
+          debug: false
+          fail_build: true
+
   Veracode_UploadAndScan:
     runs-on: ubuntu-latest
     needs: build
@@ -42,7 +62,7 @@ jobs:
         env:
           VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
           VeracodeKey: ${{ secrets.VeracodeKey }}
-          AppName: ${{ github.repository }}
+          AppName: Github Actions - ${{ github.repository }}
         with:
           vid: '$VeracodeID'
           vkey: '$VeracodeKey'
@@ -62,6 +82,7 @@ jobs:
         with:
           name: pacoteVeracode
       - name: Veracode Pipeline Scan
+        continue-on-error: true
         env:
           VID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
           VKEY: ${{ secrets.VeracodeKey }}
@@ -69,4 +90,15 @@ jobs:
         run: |
           curl -sSO https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
           unzip pipeline-scan-LATEST.zip
-          java -jar pipeline-scan.jar -vid $VID -vkey $VKEY -f $CaminhoArquivo --issue_details true
+          java -jar pipeline-scan.jar -vid $VID -vkey $VKEY -f $CaminhoArquivo --issue_details true 
+      - name: Converte para o formato SARIF
+        id: convert
+        uses: Veracode/veracode-pipeline-scan-results-to-sarif@v1.0.5
+        with:
+          pipeline-results-json: results.json
+          output-results-sarif: veracode-results.sarif
+          finding-rule-level: "3:1:0"
+      - name: Publica os resultados
+        uses: github/codeql-action/upload-sarif@v2
+        with: # Path to SARIF file relative to the root of the repository
+          sarif_file: veracode-results.sarif

@@ -30,6 +30,26 @@ jobs:
         run: |
           curl -sSL 'https://download.sourceclear.com/ci.sh' | bash -s – scan --update-advisor --pull-request --allow-dirty
 
+  Veracode-container_iac_secrets-scan:
+    runs-on: ubuntu-latest
+    name: Veracode Container/IaC/Secrets
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Verracode Container/IaC/Secrets action step
+        uses: veracode/container_iac_secrets_scanning@v1.0.0
+        with:
+          vid: ${{ secrets.VeracodeID }}
+          vkey: ${{ secrets.VeracodeKey }}
+          command: "scan" 
+          type: "directory"
+          source: "./"
+          format: "json"
+          debug: false
+          fail_build: true
+
   Veracode_UploadAndScan:
     runs-on: ubuntu-latest
     needs: build
