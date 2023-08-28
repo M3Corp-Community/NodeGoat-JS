@@ -39,7 +39,7 @@ jobs:
           name: pacoteVeracode
       - name: UploadAndScan SBs
         uses: veracode/veracode-uploadandscan-action@master # Faz a analise da Veracode
-        if: ${{ github.ref == 'refs/heads/DEV' || github.ref == 'refs/heads/HMG' }}
+        if: ${{ github.ref == 'refs/heads/QA' || github.ref == 'refs/heads/HMG' }}
         env:
           VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
           VeracodeKey: ${{ secrets.VeracodeKey }}
@@ -56,7 +56,7 @@ jobs:
           scanallnonfataltoplevelmodules: true
           includenewmodules: true
           version: ${{ github.run_id }}
-      - name: UploadAndScan
+      - name: UploadAndScan Policy
         uses: veracode/veracode-uploadandscan-action@master # Faz a analise da Veracode
         if: ${{ github.ref == 'refs/heads/Main' }}
         env:
