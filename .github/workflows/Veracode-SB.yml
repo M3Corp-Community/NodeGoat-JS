@@ -1,6 +1,6 @@
 name: Veracode_SB
 on: 
-    workflow_dispatch:
+    push:
 
 jobs:
   build:
