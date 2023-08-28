@@ -30,7 +30,7 @@ jobs:
 
   Veracode_UploadAndScan:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/DEV' || github.ref == 'refs/heads/HMG' || github.ref == 'refs/heads/Main' }}
+    if: ${{ github.ref == 'refs/heads/QA' || github.ref == 'refs/heads/HMG' || github.ref == 'refs/heads/Main' }}
     needs: Package
     steps:
       - name: Download Artefato
@@ -39,7 +39,7 @@ jobs:
           name: pacoteVeracode
       - name: UploadAndScan SBs
         uses: veracode/veracode-uploadandscan-action@master # Faz a analise da Veracode
-        if: ${{ github.ref == 'refs/heads/QA' || github.ref == 'refs/heads/HMG' }}
+        if: ${{ github.ref != 'refs/heads/Main' }}
         env:
           VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
           VeracodeKey: ${{ secrets.VeracodeKey }}
