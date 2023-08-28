@@ -1,4 +1,4 @@
-name: Pipeline_Ideal
+name: Comparativo
 on:
   push:
     branches: [ master ]
@@ -47,9 +47,9 @@ jobs:
           vkey: '$VKEY'
           criticality: 'VeryHigh'
           appname: '$AppName'
-          createsandbox: true
+          scanpollinginterval: 30
+          scantimeout: 45
           filepath: 'veracode.zip'
-          deleteIncompleteScan: false
           version: ${{ github.run_id }}
 
   Veracode_PipelineScan:

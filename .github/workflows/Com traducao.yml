@@ -1,0 +1,125 @@
+name: Resultados_PTBR
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+jobs:
+  Download_Wrapper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Veracode Pipeline Scan
+        run: |
+          curl -sSO https://tools.veracode.com/integrations/API-Wrappers/C%23/bin/VeracodeC%23API.zip
+          unzip VeracodeC%23API.zip
+      - name: Publicando Artefato
+        uses: actions/upload-artifact@v2
+        with:
+          name: WrapperVeracode
+          path: VeracodeC#API.exe
+
+  Download_XML:
+    runs-on: windows-latest
+    needs: Download_Wrapper
+    steps:
+      - name: Download Artefato
+        uses: actions/download-artifact@v2
+        with:
+          name: WrapperVeracode
+      - name: Download XML
+        env:
+          veracodeID: ${{ secrets.VID }}
+          veracodeAPIkey: ${{ secrets.VKEY }}
+        run: |
+          # Recebe as infos
+          [xml]$INFO = $(.\VeracodeC#API.exe -vid "$veracodeID" -vkey "$veracodeAPIkey" -action GetAppList | Select-String -Pattern 'Github Actions - IGDEXE/NodeGoat-JS')
+          $appID = $INFO.app.app_id
+          [string]$INFO = .\VeracodeC#API.exe -vid $veracodeID -vkey $veracodeAPIkey -action GetAppBuilds -appid "$appID"
+          [xml]$INFO = $INFO.Replace(' xmlns=', ' _xmlns=')
+          $buildINFO = $INFO.SelectSingleNode("//application[@app_id='$appId']")
+          $buildID = $buildINFO.build.build_id
+          # Gera o relatorio
+          $out = .\VeracodeC#API.exe -vid $veracodeID -vkey $veracodeAPIkey -action detailedreport -buildid "$buildID" -outputfilepath "${{ github.run_id }}.xml"
+      - name: Publicando Artefato
+        uses: actions/upload-artifact@v2
+        with:
+          name: WrapperVeracode
+          path: ${{ github.run_id }}.xml
+
+  Resultados:
+    runs-on: windows-latest
+    needs: Download_XML
+    steps:
+      - name: Download Artefato
+        uses: actions/download-artifact@v2
+        with:
+          name: pacoteVeracode
+      
+      - name: Resultado do Scan
+        run: |
+          function Traduzir {
+              param (
+                  [parameter(position=0,Mandatory=$True)]
+                  $texto,
+                  [parameter(position=1)]
+                  $idiomaAlvo = "pt"
+              )
+
+              # Utiliza a API do Google para traduzir
+              Try {
+                  $Uri = “https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=$($idiomaAlvo)&dt=t&q=$texto”
+                  $Response = Invoke-RestMethod -Uri $Uri -Method Get
+                  # Retorna o valor traduzido
+                  $traducao = $Response[0].SyncRoot | foreach { $_[0] }
+                  return $traducao
+              }
+              Catch {
+                  # Recebe o erro
+                  $ErrorMessage = $_.Exception.Message # Recebe o erro
+                  # Exibe a mensagem de erro
+                  Write-Host "Erro ao traduzir"
+                  Write-host $ErrorMessage
+              }
+          }
+
+          # Recebendo informacoes
+          $securityINFO = [xml](Get-Content "${{ github.run_id }}.xml")
+          $notaLetra = $securityINFO.detailedreport.'static-analysis'.rating
+          $notaScore = $securityINFO.detailedreport.'static-analysis'.score
+          $veracodeAppName = $securityINFO.detailedreport.app_name
+          $numeroVersao = $securityINFO.detailedreport.version
+          $appID = $securityINFO.detailedreport.app_id
+          $quemEnviou = $securityINFO.detailedreport.submitter
+          $politica = $securityINFO.detailedreport.policy_name
+          $complicanceStatus = $securityINFO.detailedreport.policy_compliance_status
+          # Exibe os resultados
+          Write-Host "Resultado do Scan: $numeroVersao"
+          Write-Host "Nome App: $veracodeAppName - App ID: $appID"
+          Write-Host "Enviado por: $quemEnviou"
+          Write-Host "Politica: $politica"
+          Write-Host "Nota: $notaLetra - Score: $notaScore - Resultado: $complicanceStatus"
+          Write-Host "Lista dos problemas encontrados:"
+          # Recebe os leveis e reordena
+          $levels = $securityINFO.detailedreport.severity.level
+          [array]::Reverse($levels)
+          foreach ($level in $levels) {
+              Write-Host "Prioridade: $level"
+              # Recebe as informações
+              $itensCategoria = $securityINFO.detailedreport.severity[$level].category
+              foreach ($item in $itensCategoria) {
+                  $idCWE = $item.cwe.cweid
+                  $nomeCategoria = $item.categoryname
+                  $descricao = $item.desc.para.text
+                  $recomendacoes = $item.recommendations.para.text
+                  # Faz a tradução
+                  $descricao = Traduzir $descricao
+                  $recomendacoes = Traduzir $recomendacoes
+                  # Exibe o resultado
+                  Write-Host "Categoria: $nomeCategoria - ID CWE: $idCWE"
+                  Write-Host "Descrição: $descricao"
+                  Write-Host " "
+                  Write-Host "Remediação: $recomendacoes"
+                  Write-Host " "
+                  Write-Host " "
+              }
+              Write-Host "..."
+          }
