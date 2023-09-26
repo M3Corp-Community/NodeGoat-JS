@@ -15,7 +15,7 @@ jobs:
           Write-Host "Configurando: Wrapper"
           $pastaferramenta = "."
           $urlDownload = "https://tools.veracode.com/integrations/API-Wrappers/C%23/bin/VeracodeC%23API.zip" # Define a url de download
-          $caminhoDownload = "$env:LOCALAPPDATA/VeracodeAPI.zip" # Define um caminho para o arquivo de download
+          $caminhoDownload = "VeracodeAPI.zip" # Define um caminho para o arquivo de download
           Invoke-WebRequest -Uri "$urlDownload" -OutFile "$caminhoDownload" # Faz o download
           Expand-Archive -Path "$caminhoDownload" -DestinationPath "$pastaferramenta" -Force # Descompacta o ZIP para uma pasta
           Rename-Item -Path "$pastaferramenta/VeracodeC#API.exe" -NewName "$pastaferramenta/VeracodeAPI.exe" -Force # Renomei para remover o # do nome
