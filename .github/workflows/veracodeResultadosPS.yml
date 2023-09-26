@@ -8,8 +8,12 @@ jobs:
   Veracode_Results:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Wrapper
+      - name: Results
         shell: pwsh
+        env:
+          VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
+          VeracodeKey: ${{ secrets.VeracodeKey }}
+          veracodeAppName: Github Actions - ${{ github.repository }}
         run: |
           # Download e configuração: API Wrapper
           Write-Host "Configurando: Wrapper"
@@ -20,14 +24,6 @@ jobs:
           Expand-Archive -Path "$caminhoDownload" -DestinationPath "$pastaferramenta" -Force # Descompacta o ZIP para uma pasta
           Rename-Item -Path "$pastaferramenta/VeracodeC#API.exe" -NewName "$pastaferramenta/VeracodeAPI.exe" -Force # Renomei para remover o # do nome
           Remove-Item "$caminhoDownload" # Remove o arquivo de download
-      - name: Results
-        shell: pwsh
-        env:
-          VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
-          VeracodeKey: ${{ secrets.VeracodeKey }}
-          veracodeAppName: Github Actions - ${{ github.repository }}
-        run: |
-          # Configuracoes
           $numeroVersao = Get-Date -Format hhmmssddMMyy
 
           # Recebe o App ID com base no nome da aplicacao dentro do Veracode
