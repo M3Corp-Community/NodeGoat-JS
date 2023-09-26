@@ -1,0 +1,111 @@
+name: Veracode_Results
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Empacotamento dos arquivos
+        uses: thedoctor0/zip-release@master
+        with:
+          filename: 'veracode.zip'
+          path: .
+      - name: Publicando Artefato
+        uses: actions/upload-artifact@v2
+        with:
+          name: pacoteVeracode
+          path: veracode.zip
+
+  Veracode_UploadAndScan:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download Artefato
+        uses: actions/download-artifact@v2
+        with:
+          name: pacoteVeracode
+      - name: UploadAndScan
+        uses: veracode/veracode-uploadandscan-action@master # Faz a analise da Veracode
+        env:
+          VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
+          VeracodeKey: ${{ secrets.VeracodeKey }}
+          AppName: Github Actions - ${{ github.repository }}
+        with:
+          vid: '$VeracodeID'
+          vkey: '$VeracodeKey'
+          criticality: 'VeryHigh'
+          appname: '$AppName'
+          createsandbox: true
+          filepath: 'veracode.zip'
+          deleteIncompleteScan: false
+          scantimeout: 60
+          scanpollinginterval: 30
+          toplevel: true
+          version: ${{ github.run_id }}
+
+  Veracode_Results:
+    runs-on: ubuntu-latest
+    needs: Veracode_UploadAndScan
+    steps:
+      - name: Download Wrapper
+        shell: pwsh
+        run: |
+          # Download e configuração: API Wrapper
+          Write-Host "Configurando: Wrapper"
+          $pastaferramenta = "."
+          $urlDownload = "https://tools.veracode.com/integrations/API-Wrappers/C%23/bin/VeracodeC%23API.zip" # Define a url de download
+          $caminhoDownload = "$env:LOCALAPPDATA/VeracodeAPI.zip" # Define um caminho para o arquivo de download
+          Invoke-WebRequest -Uri "$urlDownload" -OutFile "$caminhoDownload" # Faz o download
+          Expand-Archive -Path "$caminhoDownload" -DestinationPath "$pastaferramenta" -Force # Descompacta o ZIP para uma pasta
+          Rename-Item -Path "$pastaferramenta/VeracodeC#API.exe" -NewName "$pastaferramenta/VeracodeAPI.exe" -Force # Renomei para remover o # do nome
+          Remove-Item "$caminhoDownload" # Remove o arquivo de download
+      - name: Results
+        shell: pwsh
+        env:
+          VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
+          VeracodeKey: ${{ secrets.VeracodeKey }}
+          veracodeAppName: Github Actions - ${{ github.repository }}
+        run: |
+          # Configuracoes
+          $numeroVersao = Get-Date -Format hhmmssddMMyy
+
+          # Recebe o App ID com base no nome da aplicacao dentro do Veracode
+          [xml]$INFO = $(VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action GetAppList | Select-String -Pattern $veracodeAppName)
+          # Filtra o App ID
+          $appID = $INFO.app.app_id
+
+          try {
+              # Pega o ID da build
+                  [xml]$buildINFO = $(VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action getbuildinfo -appid $appID)
+                  $buildID = $buildINFO.buildinfo.build_id
+                  # Gera o relatorio
+                  $out = VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action summaryreport -buildid "$buildID" -outputfilepath "$numeroVersao.xml"
+                  $securityINFO = [xml](Get-Content "$numeroVersao.xml")
+                  # Recebendo informacoes
+                  Clear-Host
+                  $notaLetra = $securityINFO.summaryreport.'static-analysis'.rating
+                  $notaScore = $securityINFO.summaryreport.'static-analysis'.score
+                  $quemEnviou = $securityINFO.summaryreport.submitter
+                  $politica = $securityINFO.summaryreport.policy_name
+                  $complicanceStatus = $securityINFO.summaryreport.policy_compliance_status
+                  # Exibe os resultados
+                  Write-Host "Resultado do Scan: $numeroVersao"
+                  Write-Host "Nome App: $veracodeAppName - App ID: $appID"
+                  Write-Host "Enviado por: $quemEnviou"
+                  Write-Host "Politica: $politica"
+                  Write-Host "Nota: $notaLetra - Score: $notaScore - Resultado: $complicanceStatus"
+                  Write-Host "Lista dos problemas encontrados:"
+                  $levels = $securityINFO.summaryreport.severity.level
+                  foreach ($level in $levels) {
+                      $securityINFO.summaryreport.severity[$level].category
+                  }
+          }
+          catch {
+              $ErrorMessage = $_.Exception.Message # Recebe o erro
+              Write-Host "Erro ao validar o Scan e pegar os dados"
+              Write-Host "$ErrorMessage"
+          }
