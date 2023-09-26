@@ -30,6 +30,7 @@ jobs:
           name: pacoteVeracode
       - name: UploadAndScan
         uses: veracode/veracode-uploadandscan-action@master # Faz a analise da Veracode
+        continue-on-error: true
         env:
           VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
           VeracodeKey: ${{ secrets.VeracodeKey }}
@@ -39,9 +40,7 @@ jobs:
           vkey: '$VeracodeKey'
           criticality: 'VeryHigh'
           appname: '$AppName'
-          createsandbox: true
           filepath: 'veracode.zip'
-          deleteIncompleteScan: false
           scantimeout: 60
           scanpollinginterval: 30
           toplevel: true
@@ -54,15 +53,7 @@ jobs:
       - name: Download Wrapper
         shell: pwsh
         run: |
-          # Download e configuração: API Wrapper
-          Write-Host "Configurando: Wrapper"
-          $pastaferramenta = "."
-          $urlDownload = "https://tools.veracode.com/integrations/API-Wrappers/C%23/bin/VeracodeC%23API.zip" # Define a url de download
-          $caminhoDownload = "$env:LOCALAPPDATA/VeracodeAPI.zip" # Define um caminho para o arquivo de download
-          Invoke-WebRequest -Uri "$urlDownload" -OutFile "$caminhoDownload" # Faz o download
-          Expand-Archive -Path "$caminhoDownload" -DestinationPath "$pastaferramenta" -Force # Descompacta o ZIP para uma pasta
-          Rename-Item -Path "$pastaferramenta/VeracodeC#API.exe" -NewName "$pastaferramenta/VeracodeAPI.exe" -Force # Renomei para remover o # do nome
-          Remove-Item "$caminhoDownload" # Remove o arquivo de download
+          curl -o veracode-wrapper.jar https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.4.11.2/vosp-api-wrappers-java-23.4.11.2.jar
       - name: Results
         shell: pwsh
         env:
@@ -72,18 +63,17 @@ jobs:
         run: |
           # Configuracoes
           $numeroVersao = Get-Date -Format hhmmssddMMyy
-
           # Recebe o App ID com base no nome da aplicacao dentro do Veracode
-          [xml]$INFO = $(VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action GetAppList | Select-String -Pattern $veracodeAppName)
+          [xml]$INFO = $(java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action GetAppList | Select-String -Pattern $Env:veracodeAppName)[0]
           # Filtra o App ID
           $appID = $INFO.app.app_id
 
           try {
               # Pega o ID da build
-                  [xml]$buildINFO = $(VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action getbuildinfo -appid $appID)
+                  [xml]$buildINFO = $(java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action getbuildinfo -appid $appID)
                   $buildID = $buildINFO.buildinfo.build_id
                   # Gera o relatorio
-                  $out = VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action summaryreport -buildid "$buildID" -outputfilepath "$numeroVersao.xml"
+                  $out = java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action summaryreport -buildid "$buildID" -outputfilepath "$numeroVersao.xml"
                   $securityINFO = [xml](Get-Content "$numeroVersao.xml")
                   # Recebendo informacoes
                   Clear-Host
@@ -94,12 +84,13 @@ jobs:
                   $complicanceStatus = $securityINFO.summaryreport.policy_compliance_status
                   # Exibe os resultados
                   Write-Host "Resultado do Scan: $numeroVersao"
-                  Write-Host "Nome App: $veracodeAppName - App ID: $appID"
+                  Write-Host "Nome App: $Env:veracodeAppName - App ID: $appID"
                   Write-Host "Enviado por: $quemEnviou"
                   Write-Host "Politica: $politica"
                   Write-Host "Nota: $notaLetra - Score: $notaScore - Resultado: $complicanceStatus"
                   Write-Host "Lista dos problemas encontrados:"
                   $levels = $securityINFO.summaryreport.severity.level
+                  [array]::Reverse($levels)
                   foreach ($level in $levels) {
                       $securityINFO.summaryreport.severity[$level].category
                   }
