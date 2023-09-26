@@ -48,6 +48,7 @@ jobs:
                   Write-Host "Nota: $notaLetra - Score: $notaScore - Resultado: $complicanceStatus"
                   Write-Host "Lista dos problemas encontrados:"
                   $levels = $securityINFO.summaryreport.severity.level
+                  [array]::Reverse($levels)
                   foreach ($level in $levels) {
                       $securityINFO.summaryreport.severity[$level].category
                   }
