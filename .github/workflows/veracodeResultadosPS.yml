@@ -20,7 +20,6 @@ jobs:
           Expand-Archive -Path "$caminhoDownload" -DestinationPath "$pastaferramenta" -Force # Descompacta o ZIP para uma pasta
           Rename-Item -Path "$pastaferramenta/VeracodeC#API.exe" -NewName "$pastaferramenta/VeracodeAPI.exe" -Force # Renomei para remover o # do nome
           Remove-Item "$caminhoDownload" # Remove o arquivo de download
-          [System.Environment]::SetEnvironmentVariable("Path", $env:Path + ";$pastaferramenta", 'User')
       - name: Results
         shell: pwsh
         env:
@@ -32,16 +31,16 @@ jobs:
           $numeroVersao = Get-Date -Format hhmmssddMMyy
           ls
           # Recebe o App ID com base no nome da aplicacao dentro do Veracode
-          [xml]$INFO = $(VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action GetAppList | Select-String -Pattern $veracodeAppName)
+          [xml]$INFO = $(./VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action GetAppList | Select-String -Pattern $veracodeAppName)
           # Filtra o App ID
           $appID = $INFO.app.app_id
 
           try {
               # Pega o ID da build
-                  [xml]$buildINFO = $(VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action getbuildinfo -appid $appID)
+                  [xml]$buildINFO = $(./VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action getbuildinfo -appid $appID)
                   $buildID = $buildINFO.buildinfo.build_id
                   # Gera o relatorio
-                  $out = VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action summaryreport -buildid "$buildID" -outputfilepath "$numeroVersao.xml"
+                  $out = ./VeracodeAPI.exe -vid $VeracodeID -vkey $VeracodeKey -action summaryreport -buildid "$buildID" -outputfilepath "$numeroVersao.xml"
                   $securityINFO = [xml](Get-Content "$numeroVersao.xml")
                   # Recebendo informacoes
                   Clear-Host
