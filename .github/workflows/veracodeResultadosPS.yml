@@ -14,13 +14,15 @@ jobs:
           curl -o veracode-wrapper.jar https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.4.11.2/vosp-api-wrappers-java-23.4.11.2.jar
       - name: Results
         shell: pwsh
+        env:
+          VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
+          VeracodeKey: ${{ secrets.VeracodeKey }}
+          veracodeAppName: Github Actions - ${{ github.repository }}
         run: |
           # Configuracoes
-          $VeracodeID = ${{ secrets.VeracodeID }}
-          $VeracodeKey = ${{ secrets.VeracodeKey }}
-          $veracodeAppName = "Github Actions - ${{ github.repository }}"
           $numeroVersao = Get-Date -Format hhmmssddMMyy
-          
+          Write-Host $VeracodeID
+          Write-Host $veracodeAppName
           # Recebe o App ID com base no nome da aplicacao dentro do Veracode
           [xml]$INFO = $(java -jar veracode-wrapper.jar -vid $VeracodeID -vkey $VeracodeKey -action GetAppList | Select-String -Pattern $veracodeAppName)
           # Filtra o App ID
