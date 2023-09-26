@@ -21,10 +21,10 @@ jobs:
         run: |
           # Configuracoes
           $numeroVersao = Get-Date -Format hhmmssddMMyy
-          Write-Host $VeracodeID
-          Write-Host $veracodeAppName
+          Write-Host $Env:VeracodeID
+          Write-Host $Env:veracodeAppName
           # Recebe o App ID com base no nome da aplicacao dentro do Veracode
-          [xml]$INFO = $(java -jar veracode-wrapper.jar -vid $VeracodeID -vkey $VeracodeKey -action GetAppList | Select-String -Pattern $veracodeAppName)
+          [xml]$INFO = $(java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action GetAppList | Select-String -Pattern $Env:veracodeAppName)
           # Filtra o App ID
           $appID = $INFO.app.app_id
 
