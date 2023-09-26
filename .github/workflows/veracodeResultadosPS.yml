@@ -21,19 +21,17 @@ jobs:
         run: |
           # Configuracoes
           $numeroVersao = Get-Date -Format hhmmssddMMyy
-          Write-Host $Env:VeracodeID
-          Write-Host $Env:veracodeAppName
           # Recebe o App ID com base no nome da aplicacao dentro do Veracode
-          [xml]$INFO = $(java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action GetAppList | Select-String -Pattern $Env:veracodeAppName)
+          [xml]$INFO = $(java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action GetAppList | Select-String -Pattern $Env:veracodeAppName)[0]
           # Filtra o App ID
           $appID = $INFO.app.app_id
 
           try {
               # Pega o ID da build
-                  [xml]$buildINFO = $(java -jar veracode-wrapper.jar -vid $VeracodeID -vkey $VeracodeKey -action getbuildinfo -appid $appID)
+                  [xml]$buildINFO = $(java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action getbuildinfo -appid $appID)
                   $buildID = $buildINFO.buildinfo.build_id
                   # Gera o relatorio
-                  $out = java -jar veracode-wrapper.jar -vid $VeracodeID -vkey $VeracodeKey -action summaryreport -buildid "$buildID" -outputfilepath "$numeroVersao.xml"
+                  $out = java -jar veracode-wrapper.jar -vid $Env:VeracodeID -vkey $Env:VeracodeKey -action summaryreport -buildid "$buildID" -outputfilepath "$numeroVersao.xml"
                   $securityINFO = [xml](Get-Content "$numeroVersao.xml")
                   # Recebendo informacoes
                   Clear-Host
@@ -44,7 +42,7 @@ jobs:
                   $complicanceStatus = $securityINFO.summaryreport.policy_compliance_status
                   # Exibe os resultados
                   Write-Host "Resultado do Scan: $numeroVersao"
-                  Write-Host "Nome App: $veracodeAppName - App ID: $appID"
+                  Write-Host "Nome App: $Env:veracodeAppName - App ID: $appID"
                   Write-Host "Enviado por: $quemEnviou"
                   Write-Host "Politica: $politica"
                   Write-Host "Nota: $notaLetra - Score: $notaScore - Resultado: $complicanceStatus"
