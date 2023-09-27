@@ -16,7 +16,9 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: pacoteVeracode
-          path: veracode.zip
+          path: |
+            baselineResults.json
+            veracode.zip
   
   Veracode_SCA:
     runs-on: ubuntu-latest
