@@ -1,4 +1,4 @@
-name: Veracode_Expert
+name: Veracode_Expert_Ex
 on:
   push:
     branches: [ master ]
@@ -62,7 +62,7 @@ jobs:
         env:
           VeracodeID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
           VeracodeKey: ${{ secrets.VeracodeKey }}
-          AppName: Github Actions - ${{ github.repository }}
+          AppName: Github - ${{ github.repository }}
         with:
           vid: '$VeracodeID'
           vkey: '$VeracodeKey'
