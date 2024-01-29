@@ -1,6 +1,8 @@
 name: Veracode_SB
 on: 
-    push:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   Package:
@@ -51,7 +53,6 @@ jobs:
           createsandbox: true
           sandboxname: ${GITHUB_REF#refs/heads/}
           filepath: 'veracode.zip'
-          deleteIncompleteScan: false
           scanallnonfataltoplevelmodules: true
           includenewmodules: true
           version: ${{ github.run_id }}
@@ -67,7 +68,6 @@ jobs:
           criticality: 'VeryHigh'
           appname: '$AppName'
           filepath: 'veracode.zip'
-          deleteIncompleteScan: false
           version: ${{ github.run_id }}
 
   Veracode_PipelineScan:

@@ -1,6 +1,8 @@
 name: Veracode_XGH
 on:
-  push
+  push:
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   Package:

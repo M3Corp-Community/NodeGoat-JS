@@ -40,5 +40,4 @@ jobs:
           appname: '$AppName'
           createprofile: true
           filepath: 'veracode.zip'
-          deleteIncompleteScan: false
           version: ${{ github.run_id }}

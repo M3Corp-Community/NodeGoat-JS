@@ -1,7 +1,5 @@
 name: M3-DevSecOps
 on:
-  push:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -113,7 +111,7 @@ jobs:
             application-id: ${{ secrets.JSCRAMBLER_APPLICATION_ID }} # This value should be created within your Jscrambler account
             secret-key: ${{ secrets.JSCRAMBLER_SECRET_KEY }} # This value can be found in your Jscrambler account
             access-key: ${{ secrets.JSCRAMBLER_ACCESS_KEY }} # This value can be found in your Jscrambler account
-            jscrambler-config-path: jscrambler.json
+            jscrambler-config-path: Jscrawbler/jscrambler.json
             files-src: |
                 **/!(jscrambler.json)
             files-dest: Jscrawbler/dist/

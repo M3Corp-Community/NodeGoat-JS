@@ -1,0 +1,49 @@
+{
+    "jscramblerVersion": "8.2",
+    "areSubscribersOrdered": false,
+    "useRecommendedOrder": true,
+    "tolerateMinification": true,
+    "profilingDataMode": "off",
+    "useAppClassification": true,
+    "browsers": {},
+    "sourceMaps": false,
+    "params": [
+      {
+        "options": {},
+        "name": "whitespaceRemoval"
+      },
+      {
+        "options": {},
+        "name": "functionReordering"
+      },
+      {
+        "options": {
+          "encoding": [
+            "hexadecimal"
+          ]
+        },
+        "name": "propertyKeysObfuscation"
+      },
+      {
+        "options": {},
+        "name": "regexObfuscation"
+      },
+      {
+        "name": "booleanToAnything"
+      },
+      {
+        "options": {
+          "encoding": [
+            "hexadecimal",
+            "unicode"
+          ],
+          "freq": 1,
+          "max": -1
+        },
+        "name": "stringEncoding"
+      },
+      {
+        "name": "globalVariableIndirection"
+      }
+    ]
+  }
