@@ -106,16 +106,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: Veracode_PipelineScan
     steps:
-        - name: Protect With Jscrambler
+      - name: Protect With Jscrambler
         id: jscrambler
         uses: jscrambler/code-integrity-actions/protect@f3abdc9bd3f9183555eae093e5891f8c86f90979
         with:
-          application-id: ${{ secrets.JSCRAMBLER_APPLICATION_ID }} # This value should be created within your Jscrambler account
-          secret-key: ${{ secrets.JSCRAMBLER_SECRET_KEY }} # This value can be found in your Jscrambler account
-          access-key: ${{ secrets.JSCRAMBLER_ACCESS_KEY }} # This value can be found in your Jscrambler account
-          jscrambler-config-path: jscrambler.json
-          files-src: |
-            **/!(jscrambler.json)
-          files-dest: Jscrawbler/dist/
-          source-maps: true
-          source-maps-output-path: Jscrawbler/dist-sourcemaps/
+            application-id: ${{ secrets.JSCRAMBLER_APPLICATION_ID }} # This value should be created within your Jscrambler account
+            secret-key: ${{ secrets.JSCRAMBLER_SECRET_KEY }} # This value can be found in your Jscrambler account
+            access-key: ${{ secrets.JSCRAMBLER_ACCESS_KEY }} # This value can be found in your Jscrambler account
+            jscrambler-config-path: jscrambler.json
+            files-src: |
+                **/!(jscrambler.json)
+            files-dest: Jscrawbler/dist/
+            source-maps: true
+            source-maps-output-path: Jscrawbler/dist-sourcemaps/
