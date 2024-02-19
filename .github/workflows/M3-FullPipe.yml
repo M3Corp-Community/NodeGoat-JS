@@ -100,7 +100,7 @@ jobs:
         with: # Path to SARIF file relative to the root of the repository
           sarif_file: veracode-results.sarif
 
-  JScrawbler:
+  JScrambler:
     runs-on: ubuntu-latest
     needs: Veracode_PipelineScan
     steps:
@@ -114,6 +114,6 @@ jobs:
             jscrambler-config-path: jscrambler.json
             files-src: |
                 **/!(jscrambler.json)
-            files-dest: Jscrawbler/dist/
+            files-dest: Jscrambler/dist/
             source-maps: true
-            source-maps-output-path: Jscrawbler/dist-sourcemaps/
+            source-maps-output-path: Jscrambler/dist-sourcemaps/
