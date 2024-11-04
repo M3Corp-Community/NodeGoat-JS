@@ -1,0 +1,30 @@
+name: Veracode_Set_Policy
+on:
+  workflow_dispatch:
+
+jobs:
+  Veracode:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Veracode Wrapper
+        run: |
+          curl -o veracode-wrapper.jar https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/23.4.11.2/vosp-api-wrappers-java-23.4.11.2.jar
+      - name: Veracode - Set Policy
+        env:
+          VID: ${{ secrets.VeracodeID }} # Lembrar de criar as credenciais no Secrets
+          VKEY: ${{ secrets.VeracodeKey }}
+          veracodeAppProfile: Github - ${{ github.repository }}
+          veracodePolicy: ${{ secrets.veracodePolicy }}
+        run: |
+          # Obtem as informacoes do projeto
+          INFO=$(java -jar veracode-wrapper.jar -vid $VID -vkey $VKEY -action GetAppList)
+          appID=$(echo "$INFO" | grep -oP '(?<=app_id=")[^"]+(?=" app_name="'$veracodeAppProfile'")')
+
+          # Verifica se o appID foi extraido corretamente
+          if [ -n "$appID" ]; then
+            # Faz a edicao
+            java -jar veracode-wrapper.jar -vid $VID -vkey $VKEY -action updateapp -appid $appID -policy "$veracodePolicy"
+            echo "Add $veracodeAppProfile (ID: $appID) in Policy $veracodePolicy"
+          else
+            echo "App ID não encontrado para o perfil $veracodeAppProfile"
+          fi
